@@ -1,0 +1,632 @@
+<html><head><base href="https://creativespace.recipes/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Recetas Espacial - Creative Space</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #0a192f;
+        color: #ffffff;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        min-height: 100vh;
+    }
+    .container {
+        background-color: #172a45;
+        border-radius: 10px;
+        padding: 20px;
+        max-width: 800px;
+        width: 50%;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-right: 20px;
+    }
+    .explanation {
+        background-color: #172a45;
+        border-radius: 10px;
+        padding: 20px;
+        max-width: 400px;
+        width: 30%;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+        text-align: center;
+        color: #64ffda;
+        margin-bottom: 20px;
+    }
+    .section {
+        margin-bottom: 20px;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+        color: #8892b0;
+    }
+    input, select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #64ffda;
+        background-color: #0a192f;
+        color: #ffffff;
+        border-radius: 4px;
+    }
+    button {
+        background-color: #64ffda;
+        color: #0a192f;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.3s;
+    }
+    button:hover {
+        background-color: #45c3a8;
+    }
+    #itemsList, #recipeItems, #fixedExpensesList {
+        list-style-type: none;
+        padding: 0;
+    }
+    #itemsList li, #recipeItems li, #fixedExpensesList li {
+        background-color: #1d3557;
+        margin-bottom: 5px;
+        padding: 10px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    #profitInfo, #fixedExpensesInfo, #bulkSaleInfo, #taxInfo {
+        font-size: 1.2em;
+        font-weight: bold;
+        padding: 10px;
+        border-radius: 4px;
+        text-align: center;
+        margin-top: 20px;
+    }
+    .chart-container {
+        position: relative;
+        margin: auto;
+        height: 300px;
+        width: 100%;
+    }
+    .icon {
+        font-size: 1.5em;
+        margin-right: 10px;
+    }
+    .explanation p {
+        margin-bottom: 15px;
+    }
+    .example {
+        background-color: #1d3557;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 20px;
+    }
+    #aiAssistant {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background-color: #64ffda;
+        color: #0a192f;
+        padding: 10px;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        cursor: pointer;
+        z-index: 1000;
+    }
+    #aiAssistantMessage {
+        position: fixed;
+        top: 80px;
+        left: 20px;
+        background-color: #64ffda;
+        color: #0a192f;
+        padding: 10px;
+        border-radius: 10px;
+        max-width: 250px;
+        display: none;
+        z-index: 1000;
+    }
+    .tax-input {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .tax-input input[type="checkbox"] {
+        width: auto;
+        margin-right: 10px;
+    }
+    @media (max-width: 1200px) {
+        body {
+            flex-direction: column;
+            align-items: center;
+        }
+        .container, .explanation {
+            width: 90%;
+            margin-right: 0;
+            margin-bottom: 20px;
+        }
+    }
+</style>
+</head>
+<body>
+    <div id="aiAssistant">👨‍🚀</div>
+    <div id="aiAssistantMessage"></div>
+
+    <div class="container">
+        <h1><span class="icon">🚀</span>Calculadora de Recetas Espacial - Creative Space</h1>
+        
+        <div class="section">
+            <h2><span class="icon">🧑‍🚀</span>Ingredientes y Desechables</h2>
+            <input type="text" id="itemName" placeholder="Nombre del item">
+            <input type="number" id="itemQuantity" placeholder="Cantidad">
+            <select id="itemUnit">
+                <option value="g">Gramos</option>
+                <option value="ml">Mililitros</option>
+                <option value="unit">Unidades</option>
+            </select>
+            <input type="number" id="itemCost" placeholder="Costo total del paquete">
+            <input type="number" id="itemPackageSize" placeholder="Tamaño del paquete (g, ml o unidades)">
+            <button onclick="addItem()">Agregar Item</button>
+            <ul id="itemsList"></ul>
+        </div>
+
+        <div class="section">
+            <h2><span class="icon">👨‍🍳</span>Receta</h2>
+            <select id="recipeItem"></select>
+            <input type="number" id="recipeQuantity" placeholder="Cantidad para la receta">
+            <button onclick="addToRecipe()">Agregar a la Receta</button>
+            <ul id="recipeItems"></ul>
+            <p>Costo Total de la Receta: <span id="totalRecipeCost">$0.00</span></p>
+        </div>
+
+        <div class="section">
+            <h2><span class="icon">⏱️</span>Tiempos de Preparación</h2>
+            <input type="number" id="prepTime" placeholder="Tiempo de preparación (minutos)" oninput="calculateLaborCost()">
+            <input type="number" id="cookTime" placeholder="Tiempo de cocción (minutos)" oninput="calculateLaborCost()">
+            <input type="number" id="hourlyRate" placeholder="Tarifa por hora ($)" value="100" oninput="calculateLaborCost()">
+            <p>Costo de Mano de Obra: <span id="laborCost">$0.00</span></p>
+            <p>Costo Total (Receta + Mano de Obra): <span id="totalCostWithLabor">$0.00</span></p>
+        </div>
+
+        <div class="section">
+            <h2><span class="icon">💰</span>Rentabilidad e Impuestos</h2>
+            <input type="number" id="sellingPrice" placeholder="Precio de venta" oninput="calculateProfit()">
+            <input type="number" id="desiredProfit" placeholder="Rentabilidad deseada (%)" oninput="adjustSellingPrice()">
+            <div class="tax-input">
+                <input type="checkbox" id="includeIVA" onchange="calculateTaxes()">
+                <label for="includeIVA">Incluir IVA</label>
+                <input type="number" id="ivaPercentage" placeholder="% IVA" value="16" oninput="calculateTaxes()">
+            </div>
+            <div class="tax-input">
+                <input type="checkbox" id="includeISR" onchange="calculateTaxes()">
+                <label for="includeISR">Incluir ISR</label>
+                <input type="number" id="isrPercentage" placeholder="% ISR" value="30" oninput="calculateTaxes()">
+            </div>
+            <div id="profitInfo"></div>
+            <div id="taxInfo"></div>
+        </div>
+
+        <div class="section">
+            <h2><span class="icon">📊</span>Distribución de Costos</h2>
+            <div class="chart-container">
+                <canvas id="costChart"></canvas>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><span class="icon">💼</span>Gastos Fijos Mensuales</h2>
+            <input type="text" id="expenseName" placeholder="Nombre del gasto">
+            <input type="number" id="expenseAmount" placeholder="Monto mensual">
+            <button onclick="addFixedExpense()">Agregar Gasto Fijo</button>
+            <ul id="fixedExpensesList"></ul>
+            <input type="number" id="workingDays" placeholder="Días de trabajo por semana" oninput="calculateDailySales()">
+            <div id="fixedExpensesInfo"></div>
+        </div>
+
+        <div class="section">
+            <h2><span class="icon">🚀</span>Cálculo de Venta al Mayoreo</h2>
+            <input type="number" id="bulkQuantity" placeholder="Cantidad de productos">
+            <button onclick="calculateBulkSale()">Calcular Venta al Mayoreo</button>
+            <div id="bulkSaleInfo"></div>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h2>Cómo funciona la Calculadora de Recetas Espacial</h2>
+        <p>1. <strong>Agregar Ingredientes y Desechables:</strong> Ingresa los detalles de cada item, incluyendo nombre, cantidad, unidad (gramos, mililitros o unidades), costo total del paquete y tamaño del paquete. La aplicación calculará automáticamente el costo por unidad.</p>
+        <p>2. <strong>Crear Receta:</strong> Selecciona items de la lista y especifica la cantidad necesaria para tu receta. La aplicación sumará los costos para calcular el costo total de la receta.</p>
+        <p>3. <strong>Tiempos de Preparación:</strong> Ingresa el tiempo de preparación y cocción en minutos, así como la tarifa por hora. La aplicación calculará automáticamente el costo de mano de obra.</p>
+        <p>4. <strong>Calcular Rentabilidad e Impuestos:</strong> Ingresa el precio de venta deseado o la rentabilidad deseada. Selecciona si deseas incluir IVA e ISR y ajusta los porcentajes si es necesario. La aplicación calculará el margen de rentabilidad y los impuestos aplicables.</p>
+        <p>5. <strong>Visualizar Costos:</strong> Un gráfico circular muestra la distribución de costos por item en la receta, incluyendo la mano de obra.</p>
+        <p>6. <strong>Gastos Fijos:</strong> Agrega tus gastos fijos mensuales y especifica cuántos días trabajas por semana. La calculadora determinará cuántos productos necesitas vender diariamente para cubrir estos gastos.</p>
+        <p>7. <strong>Cálculo de Venta al Mayoreo:</strong> Ingresa la cantidad de productos que quieres vender al mayoreo y la calculadora te mostrará el costo total y el precio de venta sugerido.</p>
+        <p>8. <strong>Asistente IA:</strong> Utiliza el asistente IA para obtener consejos detallados sobre el uso de la calculadora y la gestión de costos.</p>
+
+        <div class="example">
+            <h3>Ejemplo: Onigiri Espacial</h3>
+            <p>Items:</p>
+            <ul>
+                <li>Arroz: 100g a $20 por kg</li>
+                <li>Alga nori: 1 unidad a $0.50 cada una</li>
+                <li>Relleno de atún: 30g a $50 por kg</li>
+                <li>Empaque: 1 unidad a $0.30 cada uno</li>
+            </ul>
+            <p>Costo de la Receta: $3.80</p>
+            <p>Tiempo de Preparación: 15 minutos</p>
+            <p>Tiempo de Cocción: 20 minutos</p>
+            <p>Tarifa por Hora: $100</p>
+            <p>Costo de Mano de Obra: $58.33</p>
+            <p>Costo Total: $62.13</p>
+            <p>Precio de Venta Sugerido: $124.26</p>
+            <p>Ganancia: $62.13</p>
+            <p>Margen de Rentabilidad: 50%</p>
+            <p>IVA (16%): $19.88</p>
+            <p>ISR (30%): $18.64</p>
+            <p>Precio Final con Impuestos: $162.78</p>
+        </div>
+    </div>
+
+<script>
+let items = [];
+let recipe = [];
+let fixedExpenses = [];
+let chart;
+
+function addItem() {
+    const name = document.getElementById('itemName').value.toLowerCase();
+    const quantity = parseFloat(document.getElementById('itemQuantity').value);
+    const unit = document.getElementById('itemUnit').value;
+    const cost = parseFloat(document.getElementById('itemCost').value);
+    const packageSize = parseFloat(document.getElementById('itemPackageSize').value);
+
+    if (name && quantity && cost && packageSize) {
+        const unitCost = cost / packageSize;
+        const item = { name, quantity, unit, unitCost };
+        
+        items.push(item);
+        updateItemsList();
+        updateRecipeItemSelect();
+        clearItemInputs();
+    } else {
+        alert('Por favor, completa todos los campos del item.');
+    }
+}
+
+function updateItemsList() {
+    const list = document.getElementById('itemsList');
+    list.innerHTML = '';
+    items.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.textContent = `${item.name} - ${item.quantity}${item.unit} - $${item.unitCost.toFixed(2)}/${item.unit}`;
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Eliminar';
+        deleteBtn.onclick = () => deleteItem(index);
+        li.appendChild(deleteBtn);
+        list.appendChild(li);
+    });
+}
+
+function deleteItem(index) {
+    items.splice(index, 1);
+    updateItemsList();
+    updateRecipeItemSelect();
+    calculateRecipeCost();
+    updateCostChart();
+}
+
+function updateRecipeItemSelect() {
+    const select = document.getElementById('recipeItem');
+    select.innerHTML = '';
+    
+    items.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.name;
+        option.textContent = item.name;
+        select.appendChild(option);
+    });
+}
+
+function addToRecipe() {
+    const itemName = document.getElementById('recipeItem').value;
+    const quantity = parseFloat(document.getElementById('recipeQuantity').value);
+
+    if (itemName && quantity) {
+        const item = items.find(i => i.name === itemName);
+        
+        if (item) {
+            recipe.push({ ...item, quantity });
+            updateRecipeList();
+            calculateRecipeCost();
+            updateCostChart();
+        }
+    } else {
+        alert('Por favor, selecciona un item y especifica la cantidad.');
+    }
+}
+
+function updateRecipeList() {
+    const list = document.getElementById('recipeItems');
+    list.innerHTML = '';
+    recipe.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.textContent = `${item.name} - ${item.quantity}${item.unit}`;
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Eliminar';
+        deleteBtn.onclick = () => deleteFromRecipe(index);
+        li.appendChild(deleteBtn);
+        list.appendChild(li);
+    });
+}
+
+function deleteFromRecipe(index) {
+    recipe.splice(index, 1);
+    updateRecipeList();
+    calculateRecipeCost();
+    updateCostChart();
+}
+
+function calculateRecipeCost() {
+    let totalCost = 0;
+
+    recipe.forEach(item => {
+        const itemCost = item.unitCost * item.quantity;
+        totalCost += itemCost;
+    });
+
+    document.getElementById('totalRecipeCost').textContent = `$${totalCost.toFixed(2)}`;
+    
+    calculateTotalCost();
+}
+
+function calculateLaborCost() {
+    const prepTime = parseFloat(document.getElementById('prepTime').value) || 0;
+    const cookTime = parseFloat(document.getElementById('cookTime').value) || 0;
+    const hourlyRate = parseFloat(document.getElementById('hourlyRate').value) || 100;
+
+    const totalTime = (prepTime + cookTime) / 60; // Convert to hours
+    const laborCost = totalTime * hourlyRate;
+
+    document.getElementById('laborCost').textContent = `$${laborCost.toFixed(2)}`;
+    calculateTotalCost();
+}
+
+function calculateTotalCost() {
+    const recipeCost = parseFloat(document.getElementById('totalRecipeCost').textContent.slice(1));
+    const laborCost = parseFloat(document.getElementById('laborCost').textContent.slice(1));
+    const totalCost = recipeCost + laborCost;
+    
+    document.getElementById('totalCostWithLabor').textContent = `$${totalCost.toFixed(2)}`;
+    
+    calculateProfit();
+    updateCostChart();
+}
+
+function calculateProfit() {
+    const totalCost = parseFloat(document.getElementById('totalCostWithLabor').textContent.slice(1));
+    const sellingPrice = parseFloat(document.getElementById('sellingPrice').value);
+    
+    if (sellingPrice && totalCost) {
+        const profit = sellingPrice - totalCost;
+        const profitMargin = (profit / sellingPrice) * 100;
+        const profitInfoElement = document.getElementById('profitInfo');
+        
+        let profitColor;
+        if (profitMargin < 15) {
+            profitColor = '#ff6b6b';
+        } else if (profitMargin < 30) {
+            profitColor = '#feca57';
+        } else {
+            profitColor = '#5ed5a8';
+        }
+        
+        profitInfoElement.innerHTML = `
+            <p>Precio de Venta: $${sellingPrice.toFixed(2)}</p>
+            <p>Costo Total (Receta + Mano de Obra): $${totalCost.toFixed(2)}</p>
+            <p>Ganancia: $${profit.toFixed(2)}</p>
+            <p style="color: ${profitColor}">Rentabilidad: ${profitMargin.toFixed(2)}%</p>
+        `;
+
+        calculateTaxes();
+        calculateDailySales();
+    }
+}
+
+function adjustSellingPrice() {
+    const totalCost = parseFloat(document.getElementById('totalCostWithLabor').textContent.slice(1));
+    const desiredProfit = parseFloat(document.getElementById('desiredProfit').value);
+    
+    if (totalCost && desiredProfit) {
+        const sellingPrice = totalCost / (1 - (desiredProfit / 100));
+        document.getElementById('sellingPrice').value = sellingPrice.toFixed(2);
+        calculateProfit();
+    }
+}
+
+function calculateTaxes() {
+    const sellingPrice = parseFloat(document.getElementById('sellingPrice').value);
+    const includeIVA = document.getElementById('includeIVA').checked;
+    const includeISR = document.getElementById('includeISR').checked;
+    const ivaPercentage = parseFloat(document.getElementById('ivaPercentage').value) / 100;
+    const isrPercentage = parseFloat(document.getElementById('isrPercentage').value) / 100;
+
+    let ivaAmount = 0;
+    let isrAmount = 0;
+    let finalPrice = sellingPrice;
+
+    if (includeIVA) {
+        ivaAmount = sellingPrice * ivaPercentage;
+        finalPrice += ivaAmount;
+    }
+
+    if (includeISR) {
+        isrAmount = sellingPrice * isrPercentage;
+        finalPrice += isrAmount;
+    }
+
+    const taxInfoElement = document.getElementById('taxInfo');
+    taxInfoElement.innerHTML = `
+        <p>IVA (${(ivaPercentage * 100).toFixed(2)}%): $${ivaAmount.toFixed(2)}</p>
+        <p>ISR (${(isrPercentage * 100).toFixed(2)}%): $${isrAmount.toFixed(2)}</p>
+        <p>Precio Final con Impuestos: $${finalPrice.toFixed(2)}</p>
+    `;
+}
+
+function updateCostChart() {
+    const ctx = document.getElementById('costChart').getContext('2d');
+    const labels = recipe.map(item => item.name);
+    const data = recipe.map(item => item.unitCost * item.quantity);
+    
+    const laborCost = parseFloat(document.getElementById('laborCost').textContent.slice(1));
+    if (laborCost > 0) {
+        labels.push('Mano de Obra');
+        data.push(laborCost);
+    }
+    
+    if (chart) {
+        chart.destroy();
+    }
+    
+    chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    '#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff',
+                    '#5ed5a8', '#d1d8e0', '#778ca3', '#e58e26', '#2e86de'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Distribución de Costos por Item'
+                }
+            }
+        }
+    });
+}
+
+function clearItemInputs() {
+    document.getElementById('itemName').value = '';
+    document.getElementById('itemQuantity').value = '';
+    document.getElementById('itemCost').value = '';
+    document.getElementById('itemPackageSize').value = '';
+}
+
+function addFixedExpense() {
+    const name = document.getElementById('expenseName').value;
+    const amount = parseFloat(document.getElementById('expenseAmount').value);
+
+    if (name && amount) {
+        fixedExpenses.push({ name, amount });
+        updateFixedExpensesList();
+        calculateDailySales();
+    } else {
+        alert('Por favor, completa todos los campos del gasto fijo.');
+    }
+}
+
+function updateFixedExpensesList() {
+    const list = document.getElementById('fixedExpensesList');
+    list.innerHTML = '';
+    fixedExpenses.forEach((expense, index) => {
+        const li = document.createElement('li');
+        li.textContent = `${expense.name}: $${Math.round(expense.amount)}`;
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Eliminar';
+        deleteBtn.onclick = () => deleteFixedExpense(index);
+        li.appendChild(deleteBtn);
+        list.appendChild(li);
+    });
+}
+
+function deleteFixedExpense(index) {
+    fixedExpenses.splice(index, 1);
+    updateFixedExpensesList();
+    calculateDailySales();
+}
+
+function calculateDailySales() {
+    const totalFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const workingDays = parseFloat(document.getElementById('workingDays').value) || 0;
+    const sellingPrice = parseFloat(document.getElementById('sellingPrice').value) || 0;
+    const totalCost = parseFloat(document.getElementById('totalCostWithLabor').textContent.slice(1)) || 0;
+
+    if (workingDays && sellingPrice && totalCost) {
+        const profit = sellingPrice - totalCost;
+        const daysInMonth = 30; // Assuming 30 days in a month
+        const dailyExpenses = totalFixedExpenses / daysInMonth;
+        const dailySalesNeeded = Math.ceil(dailyExpenses / profit);
+
+        const fixedExpensesInfoElement = document.getElementById('fixedExpensesInfo');
+        fixedExpensesInfoElement.innerHTML = `
+            <p>Gastos Fijos Mensuales: $${Math.round(totalFixedExpenses)}</p>
+            <p>Ventas Diarias Necesarias: ${dailySalesNeeded} productos</p>
+        `;
+    }
+}
+
+function calculateBulkSale() {
+    const bulkQuantity = parseInt(document.getElementById('bulkQuantity').value);
+    const totalCost = parseFloat(document.getElementById('totalCostWithLabor').textContent.slice(1));
+    const sellingPrice = parseFloat(document.getElementById('sellingPrice').value);
+    
+    if (bulkQuantity && totalCost && sellingPrice) {
+        const totalBulkCost = totalCost * bulkQuantity;
+        const totalBulkSalePrice = sellingPrice * bulkQuantity;
+        const bulkProfit = totalBulkSalePrice - totalBulkCost;
+        const bulkProfitMargin = (bulkProfit / totalBulkSalePrice) * 100;
+
+        const bulkSaleInfoElement = document.getElementById('bulkSaleInfo');
+        bulkSaleInfoElement.innerHTML = `
+            <p>Cantidad de productos: ${bulkQuantity}</p>
+            <p>Costo Total: $${totalBulkCost.toFixed(2)}</p>
+            <p>Precio de Venta Total: $${totalBulkSalePrice.toFixed(2)}</p>
+            <p>Ganancia Total: $${bulkProfit.toFixed(2)}</p>
+            <p>Rentabilidad: ${bulkProfitMargin.toFixed(2)}%</p>
+        `;
+    } else {
+        alert('Por favor, asegúrate de haber calculado el costo de la receta, establecido un precio de venta y especificado la cantidad para la venta al mayoreo.');
+    }
+}
+
+// AI Assistant
+const aiAssistant = document.getElementById('aiAssistant');
+const aiAssistantMessage = document.getElementById('aiAssistantMessage');
+
+aiAssistant.addEventListener('click', () => {
+    aiAssistantMessage.style.display = aiAssistantMessage.style.display === 'none' ? 'block' : 'none';
+});
+
+const assistantTips = {
+    'itemName': '¡Hola, chef espacial! Aquí puedes escribir el nombre del ingrediente o desechable que quieres usar en tu receta cósmica. Por ejemplo, "harina estelar", "pan de hot dog lunar" o "caja para pastel de asteroides".',
+    'itemQuantity': '¡Atención, astronauta cocinero! En este espacio debes poner cuánto del item vas a usar. Por ejemplo, si usarás 500 gramos de harina estelar, 1 pan de hot dog lunar o 1 caja para pastel, escribe "500" o "1" aquí.',
+    'itemUnit': '¡Hora de medir en el espacio! Aquí eliges si tu item se mide en gramos, mililitros o unidades. Usa "unidades" para items como panes, salchichas, o desechables como cajas o bandejas.',
+    'itemCost': '¡Conteo de créditos estelares! Aquí pon cuánto cuesta todo el paquete del item que compraste en la tienda intergaláctica. Si una bolsa de harina estelar cuesta 2.50 créditos, pon "2.50" aquí.',
+    'itemPackageSize': '¡Misión especial de medición! Aquí debes poner cuánto pesa, contiene o cuántas unidades tiene el paquete entero que compraste en la estación espacial. Si compraste un kilo de harina estelar, pon "1000" (porque son 1000 gramos). Si compraste una caja con 50 panes de hot dog lunar, pon "50".',
+    'recipeItem': '¡Hora de cocinar en gravedad cero! Aquí selecciona el ingrediente o desechable que quieres agregar a tu receta espacial.',
+    'recipeQuantity': '¡Ajusta tus proporciones cósmicas! Aquí pon cuánto de cada item necesitas para tu receta. Si necesitas 200 gramos de harina estelar para tu pastel de meteoritos, escribe "200" aquí.',
+    'prepTime': '¡Cuenta regresiva para la preparación! Ingresa cuántos minutos te toma preparar tu receta antes de cocinarla. Este tiempo se usará para calcular el costo de mano de obra.',
+    'cookTime': '¡Tiempo de cocción orbital! Ingresa cuántos minutos tarda en cocinarse tu receta. Este tiempo se sumará al de preparación para calcular el costo total de mano de obra.',
+    'hourlyRate': '¡Valor de tu trabajo estelar! Aquí ingresa cuánto cobras por hora de trabajo. Este valor se usará para calcular el costo de mano de obra basado en los tiempos de preparación y cocción.',
+    'sellingPrice': '¡Fija el precio de tu creación intergaláctica! Aquí pon cuántos créditos estelares quieres cobrar por tu platillo espacial.',
+    'desiredProfit': '¡Apunta a las estrellas con tus ganancias! Aquí pon qué porcentaje de ganancia quieres obtener. Si quieres ganar un 30% sobre tu costo, escribe "30" aquí.',
+    'includeIVA': '¡Impuestos en el espacio! Marca esta casilla si quieres incluir el IVA en tus cálculos.',
+    'ivaPercentage': '¡Porcentaje de IVA estelar! Aquí puedes ajustar el porcentaje de IVA. El valor
